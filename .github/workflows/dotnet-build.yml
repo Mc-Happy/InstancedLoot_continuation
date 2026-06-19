@@ -29,8 +29,13 @@ jobs:
       - name: Publish
         run: dotnet publish --configuration Release --output publish/
       
+      - name: Run Release Build Script
+        run: pwsh build-release.ps1 -Configuration Release
+      
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: InstancedLoot-${{ github.run_number }}
-          path: publish/
+          path: |
+            publish/
+            Nicebowl-InstancedLoot-*.zip

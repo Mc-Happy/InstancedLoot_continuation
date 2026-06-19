@@ -24,7 +24,7 @@ jobs:
           persist-credentials: true # allow pushing tags with GITHUB_TOKEN
 
       - name: Mark workspace as a safe Git directory
-        run: git config --global --add safe.directory "${{ github.workspace }}"
+        run: git config --global --add safe.directory "/__w/InstancedLoot_continuation/InstancedLoot_continuation"
 
       - name: Restore dependencies
         run: dotnet restore

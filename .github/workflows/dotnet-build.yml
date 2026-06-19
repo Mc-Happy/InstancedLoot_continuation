@@ -1,117 +1,33 @@
-name: Build and Release
+name: Build
 
 on:
   push:
     branches:
       - master
 
-permissions:
-  contents: write   # allow pushing tags and creating releases
-  packages: write
-
 jobs:
-  build-and-release:
+  build-dll:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/dotnet/sdk:8.0
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0            # need full history for tags
           submodules: recursive
-          persist-credentials: true # allow pushing tags with GITHUB_TOKEN
-
-      - name: Mark workspace as a safe Git directory
-        run: git config --global --add safe.directory "/__w/InstancedLoot_continuation/InstancedLoot_continuation"
-
+      
       - name: Restore dependencies
         run: dotnet restore
-
+      
       - name: Build
         run: dotnet build --configuration Release
-
+      
       - name: Publish
         run: dotnet publish --configuration Release --output publish/
-
-      - name: Determine next tag (patch bump) and push
-        id: tag
-        run: |
-          set -e
-          git fetch --tags
-
-          # Find the latest tag matching vMAJOR.MINOR.PATCH
-          latest_tag=$(git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n1)
-          if [ -z "$latest_tag" ]; then
-            latest_tag="v0.0.0"
-          fi
-          echo "Latest tag: $latest_tag"
-
-          # strip leading 'v'
-          ver=${latest_tag#v}
-          IFS='.' read -r major minor patch <<< "$ver"
-
-          # bump patch; change logic here to bump minor/major instead
-          patch=$((patch + 1))
-
-          NEXT_TAG="v${major}.${minor}.${patch}"
-          echo "New tag will be: $NEXT_TAG"
-
-          # Configure git user and create annotated tag
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Try pushing tag with simple retry in case of race
-          tries=0
-          while [ $tries -lt 3 ]; do
-            if git rev-parse "$NEXT_TAG" >/dev/null 2>&1; then
-              echo "Tag $NEXT_TAG already exists locally; recalculating..."
-              # recompute from remote
-              git fetch --tags
-              latest_tag=$(git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n1)
-              ver=${latest_tag#v}
-              IFS='.' read -r major minor patch <<< "$ver"
-              patch=$((patch + 1))
-              NEXT_TAG="v${major}.${minor}.${patch}"
-              echo "Retrying with $NEXT_TAG"
-            else
-              git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG"
-              if git push origin "$NEXT_TAG"; then
-                echo "Pushed tag $NEXT_TAG"
-                break
-              else
-                echo "Push failed (possible race). Retrying..."
-                # remove local tag and retry after fetching remote tags
-                git tag -d "$NEXT_TAG" || true
-                git fetch --tags
-                latest_tag=$(git tag --list "v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n1)
-                ver=${latest_tag#v}
-                IFS='.' read -r major minor patch <<< "$ver"
-                patch=$((patch + 1))
-                NEXT_TAG="v${major}.${minor}.${patch}"
-              fi
-            fi
-            tries=$((tries + 1))
-          done
-
-          if [ $tries -ge 3 ]; then
-            echo "Failed to create/push tag after retries" >&2
-            exit 1
-          fi
-
-          echo "NEXT_TAG=$NEXT_TAG" >> $GITHUB_ENV
-
-      - name: Create GitHub Release and upload publish/ as assets
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ env.NEXT_TAG }}
-          name: Release ${{ env.NEXT_TAG }}
-          body: Automated release for ${{ env.NEXT_TAG }}
-          files: publish/**
-
-      - name: Upload workflow artifact (optional)
+      
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: InstancedLoot-${{ env.NEXT_TAG }}
+          name: InstancedLoot-${{ github.ref_name }}
           path: publish/

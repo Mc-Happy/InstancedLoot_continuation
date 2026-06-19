@@ -1,6 +1,6 @@
 {
     "name": "InstancedLoot_continuation",
-    "version_number": "1.4.0",
+    "version_number": "1.5.0",
     "website_url": "https://github.com/Frenqy/InstancedLoot_continuation",
     "description": "Makes chest and/or item drops separate for each player",
     "dependencies": [

@@ -18,17 +18,17 @@ public class RouletteChestControllerHandler : AbstractHookHandler
         On.RoR2.RouletteChestController.Start -= On_RouletteChestController_Start;
     }
 
-    private void On_RouletteChestController_EjectPickupServer(On.RoR2.RouletteChestController.orig_EjectPickupServer orig, RouletteChestController self, PickupIndex pickupIndex)
+    private void On_RouletteChestController_EjectPickupServer(On.RoR2.RouletteChestController.orig_EjectPickupServer orig, RouletteChestController self, UniquePickup pickup)
     {
         if (self.GetComponent<InstanceInfoTracker>() is var instanceInfoTracker && instanceInfoTracker != null)
         {
             hookManager.GetHandler<PickupDropletControllerHandler>().InstanceOverrideInfo = instanceInfoTracker.Info;
-            orig(self, pickupIndex);
+            orig(self, pickup);
             hookManager.GetHandler<PickupDropletControllerHandler>().InstanceOverrideInfo = null;
         }
         else
         {
-            orig(self, pickupIndex);
+            orig(self, pickup);
         }
     }
 

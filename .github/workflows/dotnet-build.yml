@@ -23,6 +23,9 @@ jobs:
           submodules: recursive
           persist-credentials: true # allow pushing tags with GITHUB_TOKEN
 
+      - name: Mark workspace as a safe Git directory
+        run: git config --global --add safe.directory "${{ github.workspace }}"
+
       - name: Restore dependencies
         run: dotnet restore
 

@@ -21,6 +21,7 @@ public class HookManager
         RegisterHandler<SpawnCardHandler>();
         RegisterHandler<ChatHandler>();
         RegisterHandler<DeathRewardsHandler>();
+        RegisterHandler<PurchaseInteractionHandler>();
         // RegisterHandler<EventFunctionsHandler>();
         
         RegisterHandler<PingHandler>();

@@ -71,8 +71,13 @@ public class InstancedLoot : BaseUnityPlugin
         ModConfig = new Config(this, Logger);
         HookManager = new HookManager(this);
         ObjectHandlerManager = new ObjectHandlerManager(this);
-        
+
         NetworkingAPI.RegisterMessageType<SyncInstances>();
+
+        // RoR2 doesn't auto-scan BepInEx-loaded assemblies for [ConCommand], so register ours
+        // explicitly (before Console init) to expose the il_dump debug command.
+        try { HG.Reflection.SearchableAttribute.ScanAssembly(typeof(InstancedLoot).Assembly); }
+        catch (Exception e) { Logger.LogWarning($"il_dump command registration failed: {e}"); }
     }
 
     public static List<SyncInstances.InstanceHandlerEntry[]> FailedSyncs = new();

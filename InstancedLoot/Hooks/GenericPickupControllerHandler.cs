@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using InstancedLoot.Components;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -33,10 +34,28 @@ public class GenericPickupControllerHandler : AbstractHookHandler
     private void On_GenericPickupController_Start(On.RoR2.GenericPickupController.orig_Start orig,
         GenericPickupController self)
     {
-        if (NetworkServer.active) 
+        if (NetworkServer.active)
             Plugin.HandleInstancing(self.gameObject, isObject: false);
 
         orig(self);
+
+        if (NetworkServer.active)
+            LogItemOwnership(self);
+    }
+
+    // [IL-Loot] one line per pickup as it lands/spawns: who owns it and who can pick it up.
+    // Covers auto-popped chest/shop loot (Feature 2). Gated by the shared verbose flag.
+    private static void LogItemOwnership(GenericPickupController self)
+    {
+        var def = PickupCatalog.GetPickupDef(self.pickupIndex);
+        string item = def != null ? def.internalName : "?";
+        var info = self.GetComponent<InstanceInfoTracker>();
+        string owner = info != null && info.Owner != null ? info.Owner.gameObject.name : "<none>";
+        var ih = self.GetComponent<InstanceHandler>();
+        string players = ih == null ? "<not instanced>"
+            : "{" + string.Join(",", ih.Players.Select(p => p.gameObject.name)) + "}";
+        string mode = ih == null ? "None" : ih.ObjectInstanceMode.ToString();
+        PurchaseInteractionHandler.Raw($"[IL-Loot] item landed name={self.name} item={item} owner={owner} players={players} mode={mode}");
     }
 
     private Interactability On_GenericPickupController_GetInteractability(On.RoR2.GenericPickupController.orig_GetInteractability orig, GenericPickupController self, Interactor activator)

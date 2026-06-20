@@ -22,6 +22,7 @@ public class HookManager
         RegisterHandler<ChatHandler>();
         RegisterHandler<DeathRewardsHandler>();
         RegisterHandler<PurchaseInteractionHandler>();
+        RegisterHandler<HackingBeaconHandler>();
         // RegisterHandler<EventFunctionsHandler>();
         
         RegisterHandler<PingHandler>();

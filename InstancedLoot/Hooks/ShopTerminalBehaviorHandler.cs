@@ -1,4 +1,6 @@
+using System.Linq;
 using InstancedLoot.Components;
+using InstancedLoot.ObjectHandlers;
 using RoR2;
 using UnityEngine.Networking;
 
@@ -24,9 +26,9 @@ public class ShopTerminalBehaviorHandler : AbstractHookHandler
         {
             if (Plugin.ObjectHandlerManager.HandleAwaitedObject(self.gameObject))
                 return;
-            
+
             orig(self);
-            
+
             InstanceHandler instanceHandler = self.GetComponent<InstanceHandler>();
 
             if(instanceHandler == null)
@@ -42,15 +44,19 @@ public class ShopTerminalBehaviorHandler : AbstractHookHandler
                 if(objName.StartsWith("LunarShopTerminal")) objectType = Enums.ObjectType.LunarShopTerminal;
                 
                 if(objectType != null) Plugin.HandleInstancing(self.gameObject, new InstanceInfoTracker.InstanceOverrideInfo(objectType));
-                else
+                else if (self.serverMultiShopController is var multiShopController && multiShopController != null
+                         && multiShopController.GetComponent<InstanceHandler>() is var shopHandler && shopHandler != null)
                 {
-                    if (self.serverMultiShopController &&
-                        self.serverMultiShopController.GetComponent<InstanceInfoTracker>() is var instanceInfoTracker &&
-                        instanceInfoTracker)
-                    {
+                    // This terminal resolved after its multishop was already instanced (deferred
+                    // terminal resolution), so it never received its own InstanceHandler and would be
+                    // ungated (anyone could buy it). Instance it now for the same owner as its shop so
+                    // it is owner-gated and per-player isolated like the other terminals.
+                    var shopPlayers = shopHandler.Players.ToArray();
+                    Plugin.ObjectHandlerManager.GetHandler<MultiShopHandler>()
+                        .InstanceSingleObjectFrom(self.gameObject, self.gameObject, shopPlayers);
+
+                    if (multiShopController.GetComponent<InstanceInfoTracker>() is var instanceInfoTracker && instanceInfoTracker)
                         instanceInfoTracker.Info.AttachTo(self.gameObject);
-                    }
-                        
                 }
             }
         }

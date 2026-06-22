@@ -22,6 +22,7 @@ public class ShrineChanceHandler : AbstractObjectHandler
         
         Plugin.HookManager.RegisterHandler<ShrineChanceBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
     }
 
     public override InstanceHandler InstanceSingleObjectFrom(GameObject source, GameObject target,

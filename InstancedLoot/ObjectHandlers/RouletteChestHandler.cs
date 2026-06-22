@@ -22,6 +22,7 @@ public class RouletteChestHandler : AbstractObjectHandler
         
         Plugin.HookManager.RegisterHandler<RouletteChestControllerHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
     }
 
     public override InstanceHandler InstanceSingleObjectFrom(GameObject source, GameObject target,

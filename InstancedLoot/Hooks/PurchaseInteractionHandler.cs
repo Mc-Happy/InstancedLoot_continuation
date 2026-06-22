@@ -62,6 +62,12 @@ public class PurchaseInteractionHandler : AbstractHookHandler
            && characterBody.master is var master && master
            && master.playerCharacterMasterController is var player && player)
             InstanceInfoTracker.InstanceOverrideInfo.SetOwner(self.gameObject, player);
+        // A Captain hacking beacon auto-pops without a player activator. Attribute the loot to the
+        // beacon owner so auto-popped chest/shop items reserve to them (requires an owner-only item
+        // mode in config). The hack is already scoped to the owner's own instance by HackingBeaconHandler.
+        else if (hookManager.HookHandlers.TryGetValue(typeof(HackingBeaconHandler), out var hackingHandler)
+                 && ((HackingBeaconHandler)hackingHandler).TryGetHackOwner(self, out var beaconOwner))
+            InstanceInfoTracker.InstanceOverrideInfo.SetOwner(self.gameObject, beaconOwner);
 
         orig(self, activator);
 

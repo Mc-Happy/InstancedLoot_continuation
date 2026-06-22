@@ -39,6 +39,7 @@ public class MultiShopHandler : AbstractObjectHandler
         Plugin.HookManager.RegisterHandler<MultiShopControllerHandler>();
         Plugin.HookManager.RegisterHandler<ShopTerminalBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
     }
 
     public override InstanceHandler InstanceSingleObjectFrom(GameObject source, GameObject target,

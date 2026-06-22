@@ -40,6 +40,7 @@ public class ChestHandler : AbstractObjectHandler
         
         Plugin.HookManager.RegisterHandler<ChestBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
         Plugin.HookManager.RegisterHandler<ScavBackpackOpeningHandler>();
     }
 

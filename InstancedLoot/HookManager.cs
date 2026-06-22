@@ -33,7 +33,7 @@ public class HookManager
         RegisterHandler<PickupPickerControllerHandler>();
         RegisterHandler<PickupDropletControllerHandler>();
         
-        // RegisterHandler<InteractorHandler>();
+        RegisterHandler<InteractorHandler>();
     }
 
     public void RegisterHandler<T>() where T : AbstractHookHandler, new()
@@ -51,7 +51,16 @@ public class HookManager
 
     public void RegisterHooks()
     {
-        foreach (var handler in HookHandlers.Values) handler.RegisterHooks();
+        foreach (var handler in HookHandlers.Values)
+            try
+            {
+                handler.RegisterHooks();
+            }
+            catch (Exception e)
+            {
+                Plugin._logger.LogError(
+                    $"Error while registering HookHandler {handler.GetType()}, continuing so other hooks still apply:\n{e}");
+            }
     }
 
     public void UnregisterHooks()

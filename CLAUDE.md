@@ -12,7 +12,7 @@ InstancedLoot is a **BepInEx 5 plugin mod for Risk of Rain 2** (C#, `netstandard
 - Build output: `InstancedLoot/bin/Release/netstandard2.1/InstancedLoot.dll`.
 - To test in-game, copy that DLL into the local r2modman plugins folder. Use the `/deploy` skill — it does this copy for you.
 - **Path guard:** a PreToolUse hook (`.claude/hooks/guard-wsl-paths.py`) blocks all access to Windows-mounted `/mnt/*` paths except the r2modman deploy directory. Stay on the WSL filesystem; the only `/mnt` path you can touch is the deploy target.
-- **GameLibs version (`RiskOfRain2.GameLibs 1.4.0-r.0`) is load-bearing.** A version mismatch breaks MonoMod hook signatures against the game's compiled methods. Don't bump it casually.
+- **GameLibs / MMHOOK versions are load-bearing and must match the installed game.** Currently `RiskOfRain2.GameLibs 1.4.1-r.0` and `MMHOOK.RoR2 2025.12.9`. `MMHOOK.RoR2` generates the `On.*`/`IL.*` hook delegate signatures; a version older than the running game breaks MonoMod hook signatures against the game's compiled methods (e.g. a changed parameter type throws `InvalidOperationException` at hook registration). Keep both packages in sync with the game; don't bump casually.
 
 ## Architecture
 

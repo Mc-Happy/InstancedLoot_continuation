@@ -1,10 +1,17 @@
+using System.Collections.Generic;
 using InstancedLoot.Components;
 using RoR2;
+using UnityEngine.Networking;
 
 namespace InstancedLoot.Hooks;
 
 public class PurchaseInteractionHandler : AbstractHookHandler
 {
+    // Multishop instances that have already been purchased from. Vanilla's close-on-purchase is
+    // ineffective on instanced multishops, so we enforce it ourselves by disabling these in
+    // GetInteractability. Each instance has its own MultiShopController, so this is per-copy.
+    private readonly HashSet<MultiShopController> _closedMultiShops = new();
+
     public override void RegisterHooks()
     {
         On.RoR2.PurchaseInteraction.GetInteractability += On_PurchaseInteraction_GetInteractability;
@@ -21,6 +28,14 @@ public class PurchaseInteractionHandler : AbstractHookHandler
     {
         var interactability = orig(self, activator);
 
+        // Enforce multishop close-on-purchase: once any terminal of an instance has been bought,
+        // all of that instance's terminals are disabled (vanilla's own close doesn't take effect
+        // on instanced shops).
+        if (self.GetComponent<ShopTerminalBehavior>() is var shopTerminal && shopTerminal != null
+            && shopTerminal.serverMultiShopController is var multiShopController && multiShopController != null
+            && _closedMultiShops.Contains(multiShopController))
+            interactability = Interactability.Disabled;
+
         var body = activator.GetComponent<CharacterBody>();
         if (body)
         {
@@ -36,11 +51,37 @@ public class PurchaseInteractionHandler : AbstractHookHandler
 
     private void On_PurchaseInteraction_OnInteractionBegin(On.RoR2.PurchaseInteraction.orig_OnInteractionBegin orig, PurchaseInteraction self, Interactor activator)
     {
+        // Authoritative close: if this multishop instance was already purchased from, reject any
+        // further purchase even if a racing interaction got past GetInteractability this frame.
+        if (NetworkServer.active && self.GetComponent<ShopTerminalBehavior>() is var alreadyTerminal
+            && alreadyTerminal != null && alreadyTerminal.serverMultiShopController is var alreadyController
+            && alreadyController != null && _closedMultiShops.Contains(alreadyController))
+            return;
+
         if(activator.GetComponent<CharacterBody>() is var characterBody && characterBody
            && characterBody.master is var master && master
            && master.playerCharacterMasterController is var player && player)
             InstanceInfoTracker.InstanceOverrideInfo.SetOwner(self.gameObject, player);
 
         orig(self, activator);
+
+        // Vanilla's "buy one of three closes the shop" is ineffective on instanced multishops, so
+        // enforce it ourselves: mark this instance closed (our GetInteractability then disables all
+        // of its terminals) and empty the sibling terminals so they visually clear out. Each instance
+        // has its own serverMultiShopController, so only the buyer's own shop copy closes.
+        if (NetworkServer.active && self.GetComponent<ShopTerminalBehavior>() is var shopTerminal
+            && shopTerminal != null && shopTerminal.serverMultiShopController is var multiShopController
+            && multiShopController != null)
+        {
+            _closedMultiShops.Add(multiShopController);
+            multiShopController.Networkavailable = false;
+
+            foreach (var terminalGameObject in multiShopController.terminalGameObjects)
+            {
+                if (terminalGameObject == null || terminalGameObject == self.gameObject) continue;
+                if (terminalGameObject.GetComponent<ShopTerminalBehavior>() is var siblingTerminal && siblingTerminal != null)
+                    siblingTerminal.SetNoPickup();
+            }
+        }
     }
 }

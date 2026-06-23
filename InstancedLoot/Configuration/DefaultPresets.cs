@@ -20,6 +20,9 @@ public static class DefaultPresets
                 {ObjectType.VoidTriple, InstanceMode.InstancePreferred},
                 {ObjectType.Sacrifice, InstanceMode.InstanceItems},
                 {ObjectType.HuntersTricorn, InstanceMode.InstanceItems},
+                {ObjectType.TeleporterBoss, InstanceMode.InstanceItemForOwnerOnly},
+                {ObjectType.BossGroup, InstanceMode.InstanceItemForOwnerOnly},
+                {ObjectType.SuperRoboBallEncounter, InstanceMode.InstanceItemForOwnerOnly},
             })
         },
         {

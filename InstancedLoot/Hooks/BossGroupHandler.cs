@@ -85,7 +85,12 @@ public class BossGroupHandler : AbstractHookHandler
         cursor.Emit(OpCodes.Ldloc, varLoopCount);
         cursor.EmitDelegate<Action<BossGroup, int>>((self, loopCount) =>
         {
-            if (self.scaleRewardsByPlayerCount && PickupDropletControllerHandler.InstanceOverrideInfo.HasValue)
+            // Assign a round-robin owner to every boss drop, regardless of
+            // scaleRewardsByPlayerCount. Owner-only instance modes (e.g. the default
+            // InstanceItemForOwnerOnly) need a valid owner, otherwise HandleInstancing
+            // bails on its null-owner guard and the drop stays un-instanced (grabbable by
+            // anyone). For non-owner modes the assigned owner is simply ignored.
+            if (PickupDropletControllerHandler.InstanceOverrideInfo.HasValue)
             {
                 var playerIndex = loopCount % Run.instance.participatingPlayerCount;
                 var player = PlayerCharacterMasterController.instances[playerIndex];

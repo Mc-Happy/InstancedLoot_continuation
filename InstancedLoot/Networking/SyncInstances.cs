@@ -135,20 +135,26 @@ public class SyncInstances : INetMessage
     private IEnumerator HandleMessageInternal(ObjectInstanceMode objectInstanceMode, InstanceHandlerEntry[] entries, NetworkInstanceId _sourceObject)
     {
         bool validated = false;
-        int retryCount = 0;
+
+        // The only reason TryProcess fails is that a referenced networked object (a copy or a
+        // player) hasn't spawned/registered on this client yet. That can take noticeably longer
+        // than the old 40-frame (~0.7s) budget for late-spawning multishop terminals, after which
+        // the sync was silently dropped forever (FailedSyncs is never drained) and both per-player
+        // copies stayed visible. Retry every frame against a generous wall-clock timeout instead.
+        float startTime = Time.unscaledTime;
+        const float timeoutSeconds = 30f;
 
         GameObject sourceObject = null;
-        
+
         while (!validated)
         {
-            if (retryCount > 40)
+            if (Time.unscaledTime - startTime > timeoutSeconds)
             {
-                InstancedLoot.Instance._logger.LogError("SyncInstances failed to process too many times; aborting.");
+                InstancedLoot.Instance._logger.LogError("SyncInstances failed to process within timeout; aborting.");
                 InstancedLoot.FailedSyncs.Add(entries);
                 yield break;
             }
 
-            retryCount++;
             validated = true;
 
             for(int i = 0; i < entries.Length; i++) validated = validated && entries[i].TryProcess();
@@ -157,7 +163,7 @@ public class SyncInstances : INetMessage
             {
                 sourceObject = Util.FindNetworkObject(_sourceObject);
 
-                validated = validated && sourceObject == null;
+                validated = validated && sourceObject != null;
             }
 
             if (!validated) yield return 0;

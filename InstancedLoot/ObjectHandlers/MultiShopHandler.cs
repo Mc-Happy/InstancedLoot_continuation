@@ -3,6 +3,7 @@ using InstancedLoot.Enums;
 using InstancedLoot.Hooks;
 using RoR2;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace InstancedLoot.ObjectHandlers;
 
@@ -75,6 +76,16 @@ public class MultiShopHandler : AbstractObjectHandler
             if (targetMultiShopController != null)
             {
                 MultiShopController sourceMultiShopController = source.GetComponent<MultiShopController>();
+
+                // The clone controller (spawned via CloneObject/SpawnCard) already created its own
+                // terminal set during spawn. CreateTerminals() below replaces terminalGameObjects
+                // with a fresh set but leaves the original GameObjects alive in the scene; those
+                // orphans then fire Start, hit the deferred-terminal path, and get instanced as a
+                // duplicate set for this player. Destroy them first so exactly one mapped set remains.
+                if (targetMultiShopController.terminalGameObjects != null)
+                    foreach (var oldTerminal in targetMultiShopController.terminalGameObjects)
+                        if (oldTerminal != null)
+                            NetworkServer.Destroy(oldTerminal);
 
                 targetMultiShopController.rng = new Xoroshiro128Plus(0); //Temporary RNG
                 targetMultiShopController.CreateTerminals();

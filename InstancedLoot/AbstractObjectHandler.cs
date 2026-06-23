@@ -159,6 +159,17 @@ public abstract class AbstractObjectHandler
 
             InstanceHandler sourceHandler = source.GetComponent<InstanceHandler>();
             instanceHandler.SharedInfo = sourceHandler.SharedInfo;
+
+            // Clones (source != target) are spawned fresh via DoSpawn and generate their own
+            // cost; force them to match the source object's authoritative cost so every player
+            // sees the same price. (The primary instance has source == target, so it's untouched.)
+            if (source != target)
+            {
+                PurchaseInteraction sourcePurchase = source.GetComponent<PurchaseInteraction>();
+                PurchaseInteraction targetPurchase = target.GetComponent<PurchaseInteraction>();
+                if (sourcePurchase != null && targetPurchase != null)
+                    targetPurchase.Networkcost = sourcePurchase.Networkcost;
+            }
         }
         return instanceHandler;
     }

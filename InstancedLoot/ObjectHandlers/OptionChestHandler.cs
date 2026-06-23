@@ -34,6 +34,7 @@ public class OptionChestHandler : AbstractObjectHandler
         
         Plugin.HookManager.RegisterHandler<OptionChestBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
     }
 
     public override InstanceHandler InstanceSingleObjectFrom(GameObject source, GameObject target,

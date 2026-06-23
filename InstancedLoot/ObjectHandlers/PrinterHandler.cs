@@ -25,5 +25,6 @@ public class PrinterHandler : AbstractObjectHandler
         Plugin.HookManager.RegisterHandler<DuplicatorHandler>();
         Plugin.HookManager.RegisterHandler<ShopTerminalBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
+        Plugin.HookManager.RegisterHandler<HackingBeaconHandler>();
     }
 }

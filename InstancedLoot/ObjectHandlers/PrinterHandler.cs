@@ -18,6 +18,11 @@ public class PrinterHandler : AbstractObjectHandler
     {
         base.Init(manager);
         
+        // Printers no longer drop their output through ShopTerminalBehavior; the game runs the
+        // EntityStates.Duplicator.Duplicating state instead. DuplicatorHandler instances that drop.
+        // ShopTerminalBehaviorHandler is still registered for the other PaidWithItem objects
+        // (cauldrons / cleansing pool) that may continue to use ShopTerminalBehavior.
+        Plugin.HookManager.RegisterHandler<DuplicatorHandler>();
         Plugin.HookManager.RegisterHandler<ShopTerminalBehaviorHandler>();
         Plugin.HookManager.RegisterHandler<PurchaseInteractionHandler>();
     }

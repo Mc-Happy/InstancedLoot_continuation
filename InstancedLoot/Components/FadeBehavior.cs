@@ -202,7 +202,12 @@ public class FadeBehavior : InstancedLootBehaviour
         
         ModelLocator[] modelLocators = GetComponentsInChildren<ModelLocator>();
         gameObjects.UnionWith(modelLocators.Select(modelLocator => modelLocator.modelTransform.gameObject));
-        gameObjects.UnionWith(CustomGetComponents<CostHologramContent>(gameObjects).ToArray().Select(hologram => hologram.targetTextMesh.gameObject));
+        // Guard against a CostHologramContent whose targetTextMesh isn't wired up yet: this runs
+        // from the static SceneCamera pre-cull callback, so an NPE here would abort the per-player
+        // hide pass for every other instance in the batch that frame (leaving copies un-hidden).
+        gameObjects.UnionWith(CustomGetComponents<CostHologramContent>(gameObjects).ToArray()
+            .Where(hologram => hologram != null && hologram.targetTextMesh != null)
+            .Select(hologram => hologram.targetTextMesh.gameObject));
         
         DitherModels = CustomGetComponents<DitherModel>(gameObjects).ToArray();
         DitherModelRenderers = [..DitherModels.SelectMany(ditherModel => ditherModel.renderers)];
